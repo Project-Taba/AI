@@ -1,19 +1,16 @@
 import numpy as np
-import keras
-from keras.metrics import MeanAbsoluteError
+import tensorflow as tf
+from tensorflow.keras.metrics import MeanAbsoluteError
 from collections import deque
-
-from calibration import Calibration
 
 thresholdMAE = 0.4252552301949038 * 0.9
 
 if __name__ == "__main__":
-    calibration = Calibration()  # 객체 생성
 
-    max_accel, max_brake = calibration.get_value()
+    max_accel, max_brake = 0, 0
 
     # 사용자 정의 메트릭을 custom_objects로 제공
-    model = keras.models.load_model(
+    model = tf.keras.models.load_model(
         './taba_model.h5',
         custom_objects={'mae': MeanAbsoluteError()}
     )

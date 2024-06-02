@@ -1,20 +1,8 @@
-# 처음: session_id, calibration 데이터, 압력 2개, 속도
-# 그 다음부터: session_id, 압력 2개, 속도
-# driving status가 NONE이면 종료
-# 모두 POST
-
-# @JsonProperty("sensorType") SensorType sensorType,
-# @JsonProperty("pressureMax") double pressureMax,
-# @JsonProperty("pressureMin") double pressureMin,
-# @JsonProperty("carId")Long carId
-# carID: carID 형식, 모든 값(4개)을 받아야 사용 가능
-
-# 에러를 서버를 보냄
-
-from flask import Flask, request, jsonify, redirect
+from flask import Flask, request, jsonify
 import numpy as np
-import keras
-from keras.metrics import MeanAbsoluteError
+from tensorflow.keras.models import load_model
+from tensorflow.keras.metrics import MeanAbsoluteError
+from tensorflow.keras.layers import InputLayer
 from collections import deque
 
 # 기준값
@@ -31,11 +19,11 @@ prev_speed = 0  # 이전 속도 값
 
 
 # 모델 불러오기
-def load_model():
+def load_model_fn():
     global model
-    model = keras.models.load_model(
+    model = load_model(
         './taba_model.h5',
-        custom_objects={'mae': MeanAbsoluteError()}
+        custom_objects={'mae': MeanAbsoluteError, 'InputLayer': InputLayer}
     )
 
 
@@ -58,7 +46,6 @@ def calibration():
 
 
 @app.route("/predict", methods=["POST"])
-# 예측
 def predict():
     global prev_speed  # 전역 변수로 사용
 
@@ -67,9 +54,6 @@ def predict():
     accel_value = data.get("accelPressure")
     brake_value = data.get("brakePressure")
     cur_speed = data.get("speed")
-
-    # DRIVING, NONE -> string
-    # drive_complete = False
 
     shift_speed = cur_speed - prev_speed    # 속도 차이 저장
     prev_speed = cur_speed  # 이전 속도 저장
@@ -102,5 +86,5 @@ def predict():
 
 
 if __name__ == "__main__":
-    load_model()    # 모델 불러오기
+    load_model_fn()    # 모델 불러오기
     app.run()       # 플라스크 실행
