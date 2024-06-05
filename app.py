@@ -28,6 +28,7 @@ sensor_data = deque()  # 압력값을 저장할 큐
 car_id = None   # 차량 id
 driving_session_id = None  # 운전 세션 id
 prev_speed = 0  # 이전 속도 값
+result = "Normal"
 
 
 # 모델 불러오기
@@ -45,11 +46,11 @@ def calibration():
 
     data = request.get_json()
     sensorType = data.get('sensorType')
-    car_id = data.get("carID")
+    car_id = data.get("carId")
 
-    if sensorType == 'Accel':
+    if sensorType == 'ACCEL':
         max_accel = data.get('pressureMax')
-    elif sensorType == 'Brake':
+    elif sensorType == 'BRAKE':
         max_brake = data.get('pressureMax')
     else:
         return jsonify({"message": f"{car_id}의 Sensor Type이 정의되지 않았습니다."}), 400
@@ -60,7 +61,7 @@ def calibration():
 @app.route("/predict", methods=["POST"])
 # 예측
 def predict():
-    global prev_speed  # 전역 변수로 사용
+    global prev_speed, result  # 전역 변수로 사용
 
     # 서버로부터 accel, brake, 현재 speed을 받음
     data = request.get_json()
@@ -87,10 +88,13 @@ def predict():
         Predict = model.predict(data_array)
         MAE = np.mean(np.abs(Predict - sensor_data[-1]), axis=1)
 
+        print("MAE: ", MAE)
+        print("ThresholdMAE: ", thresholdMAE)
+
         if thresholdMAE < MAE:  # 이상치 발생
-            result = "Error"
+            result = "ERROR"
         else:
-            result = "Normal"
+            result = "NORMAL"
 
         sensor_data.popleft()  # 가장 오래된 것 제거
 

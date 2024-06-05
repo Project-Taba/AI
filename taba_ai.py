@@ -3,14 +3,11 @@ import keras
 from keras.metrics import MeanAbsoluteError
 from collections import deque
 
-from calibration import Calibration
-
 thresholdMAE = 0.4252552301949038 * 0.9
 
 if __name__ == "__main__":
-    calibration = Calibration()  # 객체 생성
 
-    max_accel, max_brake = calibration.get_value()
+    max_accel, max_brake = 300, 300
 
     # 사용자 정의 메트릭을 custom_objects로 제공
     model = keras.models.load_model(
@@ -31,9 +28,10 @@ if __name__ == "__main__":
             break
 
         # 서버로부터 accel, brake, 현재 speed을 받음
-        accel_value = 987654321
-        brake_value = 987654321
-        cur_speed = 987654321
+        # accel_value = 987654321
+        # brake_value = 987654321
+        # cur_speed = 987654321
+        accel_value, brake_value, cur_speed = map(int, input().split())
 
         shift_speed = cur_speed - prev_speed    # 속도 차이 저장
         prev_speed = cur_speed  # 이전 속도 저장
@@ -45,7 +43,7 @@ if __name__ == "__main__":
         data.append([accel_value, brake_value, shift_speed])
 
         # 데이터가 30개 이상이면 모델 예측 수행
-        if len(data) >= 30:
+        if len(data) >= 3:
             # 모델 입력을 위해 np.array로 변환
             data_array = np.array([data])  # 모델 입력을 위해 차원을 맞춤
             Predict = model.predict(data_array)
