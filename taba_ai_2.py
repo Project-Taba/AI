@@ -10,7 +10,7 @@ if __name__ == "__main__":
 
     # 사용자 정의 메트릭을 custom_objects로 제공
     model = keras.models.load_model(
-        './AI_revise.h5',
+        './AI_two_input.h5',
         custom_objects={'mae': MeanAbsoluteError()}
     )
 
@@ -40,23 +40,26 @@ if __name__ == "__main__":
             accel_value /= max_accel
             brake_value /= max_brake
 
-            data.append([accel_value, brake_value, shift_speed])
+            data.append([accel_value, brake_value])
 
             # 데이터가 n개 이상이면 모델 예측 수행
             if len(data) >= 5:
-                # 모델 입력을 위해 np.array로 변환
-                if predict_speed != None:
-                    print("predict value: ", predict_speed)
-                    print("shift speed: ", shift_speed)
-
-                    if abs(predict_speed-shift_speed) > 5:
-                        print("ERROR")
-                    else:
-                        print("NORMAL")
-
                 data_array = np.array([data])  # 모델 입력을 위해 차원을 맞춤
                 predict_speed = model.predict(data_array)
-                print(data)
+
+                # # 모델 입력을 위해 np.array로 변환
+                # if predict_speed != None:
+                print("predict value: ", predict_speed)
+                print("shift speed: ", shift_speed)
+                if abs(predict_speed - shift_speed) > 5:
+                    print("ERROR")
+                else:
+                    print("NORMAL")
+
+                    # if thresholdMAE < Pred_MAE:  # 이상치 발생
+                    #     result = "Error"
+                    # else:
+                    #     result = "Normal"
 
                 data.popleft()  # 가장 오래된 것 제거
         except:
