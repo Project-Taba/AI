@@ -49,7 +49,7 @@ if __name__ == "__main__":
                     print("predict value: ", predict_speed)
                     print("shift speed: ", shift_speed)
 
-                    if abs(predict_speed-shift_speed) > 5:
+                    if shift_speed - predict_speed > 10:
                         print("ERROR")
                     else:
                         print("NORMAL")

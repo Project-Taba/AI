@@ -77,7 +77,7 @@ def predict():
             print("shift speed: ", shift_speed)
 
             # 5키로 이상 차이난다면
-            if abs(predict_speed-shift_speed) > 5:
+            if shift_speed - predict_speed > 10:
                 print("ERROR")
             else:
                 print("NORMAL")
