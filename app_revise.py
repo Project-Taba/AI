@@ -1,24 +1,10 @@
-# 처음: session_id, calibration 데이터, 압력 2개, 속도
-# 그 다음부터: session_id, 압력 2개, 속도
-# driving status가 NONE이면 종료
-# 모두 POST
-
-# @JsonProperty("sensorType") SensorType sensorType,
-# @JsonProperty("pressureMax") double pressureMax,
-# @JsonProperty("pressureMin") double pressureMin,
-# @JsonProperty("carId")Long carId
-# carID: carID 형식, 모든 값(4개)을 받아야 사용 가능
-
-# 에러를 서버를 보냄
-
-from flask import Flask, request, jsonify, redirect
+from flask import Flask, request, jsonify
 import numpy as np
 import keras
 from keras.metrics import MeanAbsoluteError
 from collections import deque
 
 # 기준값
-thresholdMAE = 0.4252552301949038 * 0.9
 
 app = Flask(__name__)
 
@@ -29,6 +15,7 @@ car_id = None   # 차량 id
 driving_session_id = None  # 운전 세션 id
 prev_speed = 0  # 이전 속도 값
 result = "Normal"
+predict_speed = None
 
 
 # 모델 불러오기
@@ -81,20 +68,22 @@ def predict():
 
     sensor_data.append([accel_value, brake_value, shift_speed])
 
-    # 데이터가 3개 이상이면 모델 예측 수행
-    if len(sensor_data) >= 3:
+    # 데이터가 n개 이상이면 모델 예측 수행
+    if len(data) >= 5:
         # 모델 입력을 위해 np.array로 변환
-        data_array = np.array([sensor_data])  # 모델 입력을 위해 차원을 맞춤
-        Predict = model.predict(data_array)
-        MAE = np.mean(np.abs(Predict - sensor_data[-1]), axis=1)
+        if predict_speed != None:
+            # 이전에 예측한 미래값이 shift한 값과 비슷한지 예측
+            print("predict value: ", predict_speed)
+            print("shift speed: ", shift_speed)
 
-        print("MAE: ", MAE)
-        print("ThresholdMAE: ", thresholdMAE)
+            # 5키로 이상 차이난다면
+            if abs(predict_speed-shift_speed) > 5:
+                print("ERROR")
+            else:
+                print("NORMAL")
 
-        if thresholdMAE < MAE:  # 이상치 발생
-            result = "ERROR"
-        else:
-            result = "NORMAL"
+        data_array = np.array([data])  # 모델 입력을 위해 차원을 맞춤
+        predict_speed = model.predict(data_array)
 
         sensor_data.popleft()  # 가장 오래된 것 제거
 
